@@ -182,7 +182,7 @@ function slugify(name) {
     .slice(0, 60) || "foto";
 }
 
-async function resizeToWebp(file) {
+async function resizeImage(file) {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, MAX_WIDTH / bitmap.width);
   const w = Math.round(bitmap.width * scale);
@@ -192,8 +192,17 @@ async function resizeToWebp(file) {
   canvas.height = h;
   const ctx = canvas.getContext("2d");
   ctx.drawImage(bitmap, 0, 0, w, h);
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", WEBP_QUALITY));
-  return blob;
+
+  let blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", WEBP_QUALITY));
+  let ext = "webp";
+  if (!blob || blob.type !== "image/webp") {
+    // Manche Browser (u.a. Safari) unterstützen keine WebP-Kodierung über canvas.toBlob
+    // und liefern dann heimlich ein unkomprimiertes PNG zurück - deshalb explizit prüfen
+    // und in diesem Fall auf ein ordentlich komprimiertes JPEG ausweichen.
+    blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
+    ext = "jpg";
+  }
+  return { blob, ext };
 }
 
 function blobToBase64(blob) {
@@ -292,13 +301,16 @@ uploadBtn.addEventListener("click", async () => {
   let okCount = 0;
   for (const entry of entries) {
     const baseName = slugify(entry.caption || entry.file.name);
-    const filename = `${baseName}-${Date.now().toString(36)}.webp`;
     try {
       logLine(`Verarbeite "${entry.file.name}"...`);
-      const webpBlob = await resizeToWebp(entry.file);
-      const base64 = await blobToBase64(webpBlob);
+      const { blob, ext } = await resizeImage(entry.file);
+      const filename = `${baseName}-${Date.now().toString(36)}.${ext}`;
+      if (ext !== "webp") {
+        logLine(`  ⚠ Dieser Browser kann kein WebP erzeugen, weiche auf komprimiertes JPEG aus.`, "err");
+      }
+      const base64 = await blobToBase64(blob);
       await uploadImageFile(filename, base64, `Galerie-Foto hinzufügen: ${filename}`);
-      logLine(`  → Bild hochgeladen (${(webpBlob.size / 1024).toFixed(0)} KB): images/${filename}`, "ok");
+      logLine(`  → Bild hochgeladen (${(blob.size / 1024).toFixed(0)} KB): images/${filename}`, "ok");
 
       const alt = escapeHtml(entry.alt || entry.caption || "Foto");
       const captionHtml = entry.caption
