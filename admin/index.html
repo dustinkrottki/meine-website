@@ -171,7 +171,7 @@ async function resizeImage(file) {
     blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
     ext = "jpg";
   }
-  return { blob, ext };
+  return { blob, ext, width: w, height: h };
 }
 
 function blobToBase64(blob) {
@@ -216,11 +216,11 @@ function renderFileList() {
   uploadBtn.disabled = entries.length === 0;
 }
 
-async function uploadToWorker(filename, base64Content, caption, alt) {
+async function uploadToWorker(filename, base64Content, caption, alt, width, height) {
   const res = await fetch(WORKER_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ filename, contentBase64: base64Content, caption, alt }),
+    body: JSON.stringify({ filename, contentBase64: base64Content, caption, alt, width, height }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.ok) {
@@ -237,13 +237,13 @@ uploadBtn.addEventListener("click", async () => {
     const baseName = slugify(entry.caption || entry.file.name);
     try {
       logLine(`Verarbeite "${entry.file.name}"...`);
-      const { blob, ext } = await resizeImage(entry.file);
+      const { blob, ext, width, height } = await resizeImage(entry.file);
       const filename = `${baseName}-${Date.now().toString(36)}.${ext}`;
       if (ext !== "webp") {
         logLine(`  ⚠ Dieser Browser kann kein WebP erzeugen, weiche auf komprimiertes JPEG aus.`, "err");
       }
       const base64 = await blobToBase64(blob);
-      await uploadToWorker(filename, base64, entry.caption, entry.alt);
+      await uploadToWorker(filename, base64, entry.caption, entry.alt, width, height);
       logLine(`  → Veröffentlicht (${(blob.size / 1024).toFixed(0)} KB): ${filename}`, "ok");
       okCount++;
     } catch (err) {
