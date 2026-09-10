@@ -48,7 +48,7 @@
     margin-bottom: 20px;
   }
   label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
-  input[type=password], input[type=text], input[type=file] {
+  input[type=text], input[type=file] {
     width: 100%;
     padding: 10px 12px;
     border-radius: 8px;
@@ -58,8 +58,6 @@
     font-size: 0.95rem;
     margin-bottom: 14px;
   }
-  .token-row { display: flex; gap: 8px; align-items: flex-end; }
-  .token-row input { margin-bottom: 0; }
   button {
     appearance: none;
     border: none;
@@ -71,7 +69,6 @@
     background: var(--accent);
     color: #fff;
   }
-  button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
   .file-item {
     display: flex;
@@ -104,21 +101,12 @@
 <body>
 <div class="wrap">
   <h1>Neue Fotos zur Galerie hinzufügen</h1>
-  <p class="sub">Testwerkzeug für krottki.de – lädt Fotos automatisch verkleinert &amp; als WebP direkt auf die Website.</p>
-
-  <div class="panel">
-    <label for="token">GitHub-Zugangstoken</label>
-    <div class="token-row">
-      <input type="password" id="token" placeholder="ghp_...">
-      <button class="secondary" id="saveToken" type="button">Merken</button>
-    </div>
-    <p class="hint">Bleibt nur in diesem Browser gespeichert (localStorage), wird ausschließlich direkt an die GitHub-API gesendet.</p>
-  </div>
+  <p class="sub">Fotos auswählen, fertig – wird automatisch verkleinert und auf der Website veröffentlicht.</p>
 
   <div class="panel">
     <label for="fileInput">Fotos auswählen</label>
     <input type="file" id="fileInput" accept="image/*" multiple>
-    <p class="hint">Mehrfachauswahl möglich. Jedes Foto wird auf max. 1600px Breite verkleinert und als WebP gespeichert.</p>
+    <p class="hint">Mehrfachauswahl möglich. Jedes Foto wird auf max. 1600px Breite verkleinert und komprimiert.</p>
     <div id="fileList"></div>
     <button id="uploadBtn" type="button" disabled>Hochladen &amp; veröffentlichen</button>
   </div>
@@ -130,35 +118,16 @@
 </div>
 
 <script>
-const OWNER = "dustinkrottki";
-const REPO = "meine-website";
-const BRANCH = "main";
+const WORKER_URL = "https://galerie-upload.galerie-upload-worker.workers.dev/upload";
 const MAX_WIDTH = 1600;
 const WEBP_QUALITY = 0.82;
-const MARKER = "<!-- NEUE-BILDER-MARKE: hier fügt das Admin-Tool neue Galerie-Einträge ein, nicht entfernen -->";
 
-const tokenInput = document.getElementById("token");
-const saveTokenBtn = document.getElementById("saveToken");
 const fileInput = document.getElementById("fileInput");
 const fileList = document.getElementById("fileList");
 const uploadBtn = document.getElementById("uploadBtn");
 const log = document.getElementById("log");
 
 let entries = [];
-
-try {
-  const saved = localStorage.getItem("gh_token");
-  if (saved) tokenInput.value = saved;
-} catch (e) {}
-
-saveTokenBtn.addEventListener("click", () => {
-  try {
-    localStorage.setItem("gh_token", tokenInput.value.trim());
-    logLine("Token gespeichert.", "ok");
-  } catch (e) {
-    logLine("Konnte Token nicht speichern: " + e.message, "err");
-  }
-});
 
 function logLine(text, cls) {
   const line = document.createElement("div");
@@ -247,52 +216,17 @@ function renderFileList() {
   uploadBtn.disabled = entries.length === 0;
 }
 
-function escapeHtml(s) {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
-async function ghRequest(path, options = {}) {
-  const token = tokenInput.value.trim();
-  if (!token) throw new Error("Kein Token eingetragen.");
-  const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}${path}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
-      ...(options.headers || {}),
-    },
+async function uploadToWorker(filename, base64Content, caption, alt) {
+  const res = await fetch(WORKER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ filename, contentBase64: base64Content, caption, alt }),
   });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`GitHub-API-Fehler (${res.status}): ${body.slice(0, 300)}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) {
+    throw new Error(data.error || `Server-Fehler (${res.status})`);
   }
-  return res.json();
-}
-
-async function uploadImageFile(filename, base64Content, message) {
-  return ghRequest(`/contents/images/${filename}`, {
-    method: "PUT",
-    body: JSON.stringify({ message, content: base64Content, branch: BRANCH }),
-  });
-}
-
-async function updateIndexHtml(newItemHtml, message) {
-  const current = await ghRequest(`/contents/index.html?ref=${BRANCH}`);
-  const decoded = decodeURIComponent(escape(atob(current.content.replace(/\n/g, ""))));
-  if (!decoded.includes(MARKER)) {
-    throw new Error("Marker in index.html nicht gefunden - Galerie-Struktur wurde vermutlich geändert.");
-  }
-  const updated = decoded.replace(MARKER, `${newItemHtml}\n      ${MARKER}`);
-  const encoded = btoa(unescape(encodeURIComponent(updated)));
-  return ghRequest(`/contents/index.html`, {
-    method: "PUT",
-    body: JSON.stringify({
-      message,
-      content: encoded,
-      sha: current.sha,
-      branch: BRANCH,
-    }),
-  });
+  return data;
 }
 
 uploadBtn.addEventListener("click", async () => {
@@ -309,17 +243,8 @@ uploadBtn.addEventListener("click", async () => {
         logLine(`  ⚠ Dieser Browser kann kein WebP erzeugen, weiche auf komprimiertes JPEG aus.`, "err");
       }
       const base64 = await blobToBase64(blob);
-      await uploadImageFile(filename, base64, `Galerie-Foto hinzufügen: ${filename}`);
-      logLine(`  → Bild hochgeladen (${(blob.size / 1024).toFixed(0)} KB): images/${filename}`, "ok");
-
-      const alt = escapeHtml(entry.alt || entry.caption || "Foto");
-      const captionHtml = entry.caption
-        ? `\n        <div class="cap"><b>${escapeHtml(entry.caption)}</b></div>`
-        : "";
-      const itemHtml = `      <div class="item">\n        <div class="image"><img src="images/${filename}" alt="${alt}"></div>${captionHtml}\n      </div>`;
-
-      await updateIndexHtml(itemHtml, `Galerie aktualisieren: ${filename}`);
-      logLine(`  → Website-Galerie aktualisiert.`, "ok");
+      await uploadToWorker(filename, base64, entry.caption, entry.alt);
+      logLine(`  → Veröffentlicht (${(blob.size / 1024).toFixed(0)} KB): ${filename}`, "ok");
       okCount++;
     } catch (err) {
       logLine(`  ✗ Fehler bei "${entry.file.name}": ${err.message}`, "err");
