@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Galerie-Upload</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f7f6f3;
+    --panel: #ffffff;
+    --text: #1a1a1a;
+    --muted: #6b6b6b;
+    --border: #e2e0da;
+    --accent: #b3421f;
+    --ok: #2e7d32;
+    --err: #c62828;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16151a;
+      --panel: #201f26;
+      --text: #f0efe9;
+      --muted: #9b9995;
+      --border: #34323a;
+      --accent: #e0703f;
+      --ok: #7fd18a;
+      --err: #ff8a80;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 32px 16px 80px;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 0.9rem; margin: 0 0 28px; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
+  input[type=password], input[type=text], input[type=file] {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+  }
+  .token-row { display: flex; gap: 8px; align-items: flex-end; }
+  .token-row input { margin-bottom: 0; }
+  button {
+    appearance: none;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--accent);
+    color: #fff;
+  }
+  button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .file-item {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  .file-item img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+  .file-item .fields { flex: 1; min-width: 0; }
+  .file-item input { margin-bottom: 6px; }
+  .file-item input:last-child { margin-bottom: 0; }
+  #log {
+    font-family: ui-monospace, monospace;
+    font-size: 0.82rem;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  #log .ok { color: var(--ok); }
+  #log .err { color: var(--err); }
+  #log .muted { color: var(--muted); }
+  .hint { font-size: 0.8rem; color: var(--muted); margin-top: -6px; margin-bottom: 14px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Neue Fotos zur Galerie hinzufügen</h1>
+  <p class="sub">Testwerkzeug für krottki.de – lädt Fotos automatisch verkleinert &amp; als WebP direkt auf die Website.</p>
+
+  <div class="panel">
+    <label for="token">GitHub-Zugangstoken</label>
+    <div class="token-row">
+      <input type="password" id="token" placeholder="ghp_...">
+      <button class="secondary" id="saveToken" type="button">Merken</button>
+    </div>
+    <p class="hint">Bleibt nur in diesem Browser gespeichert (localStorage), wird ausschließlich direkt an die GitHub-API gesendet.</p>
+  </div>
+
+  <div class="panel">
+    <label for="fileInput">Fotos auswählen</label>
+    <input type="file" id="fileInput" accept="image/*" multiple>
+    <p class="hint">Mehrfachauswahl möglich. Jedes Foto wird auf max. 1600px Breite verkleinert und als WebP gespeichert.</p>
+    <div id="fileList"></div>
+    <button id="uploadBtn" type="button" disabled>Hochladen &amp; veröffentlichen</button>
+  </div>
+
+  <div class="panel">
+    <label>Status</label>
+    <div id="log" class="muted">Noch keine Aktion.</div>
+  </div>
+</div>
+
+<script>
+const OWNER = "dustinkrottki";
+const REPO = "meine-website";
+const BRANCH = "main";
+const MAX_WIDTH = 1600;
+const WEBP_QUALITY = 0.82;
+const MARKER = "<!-- NEUE-BILDER-MARKE: hier fügt das Admin-Tool neue Galerie-Einträge ein, nicht entfernen -->";
+
+const tokenInput = document.getElementById("token");
+const saveTokenBtn = document.getElementById("saveToken");
+const fileInput = document.getElementById("fileInput");
+const fileList = document.getElementById("fileList");
+const uploadBtn = document.getElementById("uploadBtn");
+const log = document.getElementById("log");
+
+let entries = [];
+
+try {
+  const saved = localStorage.getItem("gh_token");
+  if (saved) tokenInput.value = saved;
+} catch (e) {}
+
+saveTokenBtn.addEventListener("click", () => {
+  try {
+    localStorage.setItem("gh_token", tokenInput.value.trim());
+    logLine("Token gespeichert.", "ok");
+  } catch (e) {
+    logLine("Konnte Token nicht speichern: " + e.message, "err");
+  }
+});
+
+function logLine(text, cls) {
+  const line = document.createElement("div");
+  if (cls) line.className = cls;
+  line.textContent = text;
+  if (log.classList.contains("muted") && log.children.length === 0) {
+    log.classList.remove("muted");
+    log.textContent = "";
+  }
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+function slugify(name) {
+  return name
+    .toLowerCase()
+    .replace(/\.[a-z0-9]+$/i, "")
+    .normalize("NFKD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60) || "foto";
+}
+
+async function resizeToWebp(file) {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, MAX_WIDTH / bitmap.width);
+  const w = Math.round(bitmap.width * scale);
+  const h = Math.round(bitmap.height * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(bitmap, 0, 0, w, h);
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", WEBP_QUALITY));
+  return blob;
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+fileInput.addEventListener("change", () => {
+  entries = Array.from(fileInput.files).map((file) => ({
+    file,
+    caption: "",
+    alt: "",
+    previewUrl: URL.createObjectURL(file),
+  }));
+  renderFileList();
+});
+
+function renderFileList() {
+  fileList.innerHTML = "";
+  entries.forEach((entry, i) => {
+    const row = document.createElement("div");
+    row.className = "file-item";
+    row.innerHTML = `
+      <img src="${entry.previewUrl}" alt="">
+      <div class="fields">
+        <input type="text" placeholder="Titel / Bildunterschrift (z.B. Sonnenaufgang)" data-role="caption" data-i="${i}">
+        <input type="text" placeholder="Alt-Text für Google (kurze Bildbeschreibung)" data-role="alt" data-i="${i}">
+      </div>
+    `;
+    fileList.appendChild(row);
+  });
+  fileList.querySelectorAll("input").forEach((inp) => {
+    inp.addEventListener("input", (e) => {
+      const i = Number(e.target.dataset.i);
+      entries[i][e.target.dataset.role] = e.target.value;
+    });
+  });
+  uploadBtn.disabled = entries.length === 0;
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+async function ghRequest(path, options = {}) {
+  const token = tokenInput.value.trim();
+  if (!token) throw new Error("Kein Token eingetragen.");
+  const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}${path}`, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github+json",
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`GitHub-API-Fehler (${res.status}): ${body.slice(0, 300)}`);
+  }
+  return res.json();
+}
+
+async function uploadImageFile(filename, base64Content, message) {
+  return ghRequest(`/contents/images/${filename}`, {
+    method: "PUT",
+    body: JSON.stringify({ message, content: base64Content, branch: BRANCH }),
+  });
+}
+
+async function updateIndexHtml(newItemHtml, message) {
+  const current = await ghRequest(`/contents/index.html?ref=${BRANCH}`);
+  const decoded = decodeURIComponent(escape(atob(current.content.replace(/\n/g, ""))));
+  if (!decoded.includes(MARKER)) {
+    throw new Error("Marker in index.html nicht gefunden - Galerie-Struktur wurde vermutlich geändert.");
+  }
+  const updated = decoded.replace(MARKER, `${newItemHtml}\n      ${MARKER}`);
+  const encoded = btoa(unescape(encodeURIComponent(updated)));
+  return ghRequest(`/contents/index.html`, {
+    method: "PUT",
+    body: JSON.stringify({
+      message,
+      content: encoded,
+      sha: current.sha,
+      branch: BRANCH,
+    }),
+  });
+}
+
+uploadBtn.addEventListener("click", async () => {
+  uploadBtn.disabled = true;
+  logLine(`Starte Upload von ${entries.length} Foto(s)...`);
+  let okCount = 0;
+  for (const entry of entries) {
+    const baseName = slugify(entry.caption || entry.file.name);
+    const filename = `${baseName}-${Date.now().toString(36)}.webp`;
+    try {
+      logLine(`Verarbeite "${entry.file.name}"...`);
+      const webpBlob = await resizeToWebp(entry.file);
+      const base64 = await blobToBase64(webpBlob);
+      await uploadImageFile(filename, base64, `Galerie-Foto hinzufügen: ${filename}`);
+      logLine(`  → Bild hochgeladen (${(webpBlob.size / 1024).toFixed(0)} KB): images/${filename}`, "ok");
+
+      const alt = escapeHtml(entry.alt || entry.caption || "Foto");
+      const captionHtml = entry.caption
+        ? `\n        <div class="cap"><b>${escapeHtml(entry.caption)}</b></div>`
+        : "";
+      const itemHtml = `      <div class="item">\n        <div class="image"><img src="images/${filename}" alt="${alt}"></div>${captionHtml}\n      </div>`;
+
+      await updateIndexHtml(itemHtml, `Galerie aktualisieren: ${filename}`);
+      logLine(`  → Website-Galerie aktualisiert.`, "ok");
+      okCount++;
+    } catch (err) {
+      logLine(`  ✗ Fehler bei "${entry.file.name}": ${err.message}`, "err");
+    }
+  }
+  logLine(`Fertig: ${okCount}/${entries.length} Foto(s) veröffentlicht. Die Live-Seite baut jetzt neu (meist ~30-60 Sekunden über GitHub Pages).`, okCount === entries.length ? "ok" : "err");
+  uploadBtn.disabled = false;
+});
+</script>
+</body>
+</html>
