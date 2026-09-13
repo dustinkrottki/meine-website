@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MEEN BERLIN — Das Fotobuch von Dustin Krottki</title>
-<meta name="description" content="MEEN BERLIN: 25 Jahre Berlin, 3.300 Fotos, 500 Seiten, 25.000 Kilometer zu Fuß. Ein Fotobuch-Projekt von Dustin Krottki (Kevin Schulzbus) auf der Suche nach Ausstellung & Förderung.">
+<meta name="description" content="MEEN BERLIN: 25 Jahre Berlin, 3.300 Fotos, 500 Seiten, 25.000 Kilometer zu Fuß. Ein Fotobuch-Projekt von Dustin Krottki, aka Kevin Schulzbus, auf der Suche nach Ausstellung & Förderung.">
 <link rel="canonical" href="https://krottki.de/meen-berlin/">
 
 <meta property="og:type" content="website">
@@ -110,8 +110,8 @@
 
   /* PROJEKT TEXT */
   section#projekt { padding:100px 0 90px; }
+  .projekt-h2 { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:38px; letter-spacing:-1px; line-height:1.15; margin-bottom:44px; max-width:640px; }
   .projekt-grid { display:grid; grid-template-columns:1.1fr 0.9fr; gap:70px; }
-  .projekt-grid h2 { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:38px; letter-spacing:-1px; line-height:1.15; margin-bottom:26px; max-width:480px; }
   .projekt-grid p { font-size:17px; line-height:1.75; color:#2b2b2b; margin-bottom:20px; }
   .projekt-grid .quote {
     font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:22px; letter-spacing:-0.3px;
@@ -125,12 +125,26 @@
 
   /* GALERIE */
   section#galerie { padding-bottom:120px; }
+  .galerie-note { font-size:14px; color:#8A8A8A; font-style:italic; margin-bottom:32px; max-width:520px; }
   .grid { column-count:3; column-gap:28px; }
   .item { break-inside:avoid; margin-bottom:28px; display:inline-block; width:100%; }
-  .item .image { width:100%; overflow:hidden; background:#EDEDED; }
-  .item .image img { width:100%; height:auto; display:block; }
-  .item .cap { margin-top:12px; font-size:13px; color:#8A8A8A; }
-  .item .cap b { color:#0A0A0A; font-weight:500; }
+  .item .image { width:100%; overflow:hidden; background:#EDEDED; cursor:pointer; }
+  .item .image img { width:100%; height:auto; display:block; transition:transform 0.25s ease; }
+  .item .image:hover img { transform:scale(1.03); }
+
+  /* LIGHTBOX */
+  .lightbox {
+    position:fixed; inset:0; background:rgba(10,10,10,0.94); z-index:200;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; visibility:hidden; transition:opacity 0.2s ease, visibility 0.2s ease;
+    padding:40px;
+  }
+  .lightbox.open { opacity:1; visibility:visible; }
+  .lightbox img { max-width:100%; max-height:100%; box-shadow:0 20px 60px rgba(0,0,0,0.5); }
+  .lightbox-close {
+    position:absolute; top:28px; right:36px; color:#fff; font-size:26px; cursor:pointer;
+    width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+  }
 
   /* ÜBER DEN FOTOGRAFEN */
   section#fotograf { padding-bottom:120px; }
@@ -174,7 +188,7 @@
     .stats { grid-template-columns:repeat(2,1fr); gap:28px 20px; }
     .stat .num { font-size:34px; }
     .projekt-grid { grid-template-columns:1fr; gap:36px; }
-    .projekt-grid h2 { font-size:30px; }
+    .projekt-h2 { font-size:30px; margin-bottom:28px; }
     .grid { column-count:1; }
     .about-grid { grid-template-columns:1fr; }
     .status-box { padding:44px 28px; }
@@ -233,19 +247,19 @@
 <main class="wrap">
 
   <section id="projekt">
+    <div class="section-label">Das Projekt</div>
+    <h2 class="projekt-h2">Ein fotografisches Tagebuch dieser Stadt.</h2>
     <div class="projekt-grid">
       <div>
-        <div class="section-label">Das Projekt</div>
-        <h2>Ein fotografisches Tagebuch dieser Stadt.</h2>
-        <p>Kevin Schulzbus, 1984 in Berlin geboren, gehört zu den aktivsten urbanen Fotografen der Hauptstadt. Mal mehr, mal weniger auf, über und unter den Straßen Berlins unterwegs, führen ihn seine Wege automatisch zu seinen Motiven. Durch das Freilegen der unterschiedlichen Schichten, die die Großstadt mit sich bringt, zeigt er das wahre Gesicht von Berlin und seinen Charakteren.</p>
+        <p>Dustin Krottki — aka Kevin Schulzbus — wurde 1984 in Berlin geboren und gehört zu den aktivsten urbanen Fotografen der Hauptstadt. Mal mehr, mal weniger auf, über und unter den Straßen Berlins unterwegs, führen ihn seine Wege automatisch zu seinen Motiven. Durch das Freilegen der unterschiedlichen Schichten, die die Großstadt mit sich bringt, zeigt er das wahre Gesicht von Berlin und seinen Charakteren.</p>
         <p>Künstler, Menschen auf und von der Straße, Freunde oder zufällige Bekanntschaften — Situationen, Zufälle und Begebenheiten, die nicht alltäglich sind, formen die dokumentarischen Arbeiten und prägen die Stile, die er sich über die Jahre angeeignet hat.</p>
         <div class="quote">„Es ist eine Art Tagebuch, was MEEN BERLIN darstellen soll."</div>
       </div>
       <div>
-        <p>Für das Buch sind rund 3.300 Fotografien auf 500 Seiten zusammengestellt — das Ergebnis von 25 Jahren, in denen Kevin schätzungsweise 25.000 Kilometer zu Fuß durch Berlin gelaufen ist, immer mit der Kamera dabei.</p>
+        <p>Für das Buch sind rund 3.300 Fotografien auf 500 Seiten zusammengestellt — das Ergebnis von 25 Jahren, in denen er schätzungsweise 25.000 Kilometer zu Fuß durch Berlin gelaufen ist, immer mit der Kamera dabei.</p>
         <div class="archiv-box">
           <div class="row"><span>Format Buch</span><b>30 × 30 cm, 3 Bände</b></div>
-          <div class="row"><span>Auflage</span><b>1.000 Stück pro Buch</b></div>
+          <div class="row"><span>Auflage</span><b>500 Stück pro Buch</b></div>
           <div class="row"><span>Bindung</span><b>Schweizer Broschur, offene Fadenheftung, Heißfolienprägung</b></div>
           <div class="row"><span>Instagram-Archiv</span><b>über 13.000 Fotos, fast ausschließlich Berlin</b></div>
           <div class="row"><span>Gesamtarchiv</span><b>ca. 8 Terabyte Fotos & Videos</b></div>
@@ -257,45 +271,23 @@
 
   <section id="galerie">
     <div class="section-label">Auswahl aus dem Buch</div>
+    <p class="galerie-note">Die Fotos im Buch tragen bewusst keine Titel — jede·r Betrachter·in macht sich im Kopf sein eigenes Bild.</p>
     <div class="grid">
-      <div class="item">
-        <div class="image"><img src="/images/meen-berlin/DJI_0479_klein.webp" alt="Berlin von oben in der blauen Stunde"></div>
-        <div class="cap"><b>Berlin von oben</b></div>
-      </div>
-      <div class="item">
-        <div class="image"><img src="/images/meen-berlin/BARUN_DSC00159_klein.webp" alt="Wohnraum unter einer Berliner Brücke"></div>
-        <div class="cap"><b>Zuhause unter der Brücke</b></div>
-      </div>
-      <div class="item">
-        <div class="image"><img src="/images/meen-berlin/BEST_OF_MIX_DSC00669_klein.webp" alt="Frau am Ufer der Spree im Frühling"></div>
-        <div class="cap"><b>Frühling an der Spree</b></div>
-      </div>
-      <div class="item">
-        <div class="image"><img src="/images/meen-berlin/ON_STREET_DSC09464_klein.webp" alt="Straßenszene Ecke Flughafenstraße"></div>
-        <div class="cap"><b>Ecke Flughafenstraße</b></div>
-      </div>
-      <div class="item">
-        <div class="image"><img src="/images/meen-berlin/BEST_OF_MIX_DSC02145_klein.webp" alt="Nächtliche Straßenszene vor einem Spätkauf"></div>
-        <div class="cap"><b>Spätkauf, nachts</b></div>
-      </div>
-      <div class="item">
-        <div class="image"><img src="/images/meen-berlin/BARUN_DSC00790_klein.webp" alt="Spiegelung einer Fassade in einer Pfütze"></div>
-        <div class="cap"><b>Spiegelung</b></div>
-      </div>
-      <div class="item">
-        <div class="image"><img src="/images/meen-berlin/EPIC_STREET_DSC07074_klein.webp" alt="Brücke bei Nacht mit Spiegelung im Wasser"></div>
-        <div class="cap"><b>Nachtbrücke</b></div>
-      </div>
-      <div class="item">
-        <div class="image"><img src="/images/meen-berlin/ACAB_DSC03475_klein.webp" alt="Abendhimmel über Berlin"></div>
-        <div class="cap"><b>Abendhimmel</b></div>
-      </div>
-      <div class="item">
-        <div class="image"><img src="/images/meen-berlin/DJI_0516_klein.webp" alt="Berliner Hochbahn mit Street Art und roter Skulptur"></div>
-        <div class="cap"><b>Unter der Hochbahn</b></div>
-      </div>
+      <div class="item"><div class="image"><img src="/images/meen-berlin/DJI_0479_klein.webp" alt="Berlin von oben in der blauen Stunde"></div></div>
+      <div class="item"><div class="image"><img src="/images/meen-berlin/BARUN_DSC00159_klein.webp" alt="Wohnraum unter einer Berliner Brücke"></div></div>
+      <div class="item"><div class="image"><img src="/images/meen-berlin/BEST_OF_MIX_DSC00669_klein.webp" alt="Frau am Ufer der Spree im Frühling"></div></div>
+      <div class="item"><div class="image"><img src="/images/meen-berlin/ON_STREET_DSC09464_klein.webp" alt="Straßenszene Ecke Flughafenstraße"></div></div>
+      <div class="item"><div class="image"><img src="/images/meen-berlin/BEST_OF_MIX_DSC02145_klein.webp" alt="Nächtliche Straßenszene vor einem Spätkauf"></div></div>
+      <div class="item"><div class="image"><img src="/images/meen-berlin/BARUN_DSC00790_klein.webp" alt="Spiegelung einer Fassade in einer Pfütze"></div></div>
+      <div class="item"><div class="image"><img src="/images/meen-berlin/EPIC_STREET_DSC07074_klein.webp" alt="Brücke bei Nacht mit Spiegelung im Wasser"></div></div>
+      <div class="item"><div class="image"><img src="/images/meen-berlin/ACAB_DSC03475_klein.webp" alt="Abendhimmel über Berlin"></div></div>
     </div>
   </section>
+
+  <div class="lightbox" id="lightbox">
+    <span class="lightbox-close" id="lightboxClose">✕</span>
+    <img id="lightboxImg" src="" alt="">
+  </div>
 
   <section id="fotograf">
     <div class="section-label">Über den Fotografen</div>
@@ -345,6 +337,33 @@
   <div class="legal-links"><a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a></div>
   <div class="copyright">© 2026 Dustin Krottki</div>
 </footer>
+
+<script>
+  var lightbox = document.getElementById('lightbox');
+  var lightboxImg = document.getElementById('lightboxImg');
+  var lightboxClose = document.getElementById('lightboxClose');
+
+  document.querySelectorAll('#galerie .item .image img').forEach(function(img) {
+    img.addEventListener('click', function() {
+      lightboxImg.src = img.src;
+      lightboxImg.alt = img.alt;
+      lightbox.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    });
+  });
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', function(e) {
+    if (e.target === lightbox) closeLightbox();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLightbox();
+  });
+</script>
 
 </body>
 </html>
