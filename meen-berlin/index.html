@@ -87,10 +87,11 @@
     background:linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0.35) 65%, rgba(0,0,0,0.9) 100%);
   }
   .hero-content { position:relative; z-index:2; padding:0 60px 70px; width:100%; }
-  .hero-tag { width:100%; max-width:520px; height:auto; display:block; margin-bottom:8px; }
   .hero-content .sub { font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:19px; color:#FFFFFF; max-width:640px; line-height:1.4; margin-top:6px; }
   .hero-content .byline { font-size:14px; color:rgba(255,255,255,0.7); margin-top:20px; }
-  .cta-row { display:flex; gap:16px; margin-top:34px; flex-wrap:wrap; }
+  .bottom-row { display:flex; justify-content:space-between; align-items:center; margin-top:34px; gap:24px; flex-wrap:wrap; }
+  .hero-tag { width:220px; max-width:36vw; height:auto; display:block; flex-shrink:0; }
+  .cta-row { display:flex; gap:16px; flex-wrap:wrap; }
   .cta-button {
     display:inline-block; background:#FFFFFF; color:#0A0A0A; text-decoration:none;
     font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:15px;
@@ -180,7 +181,8 @@
     .wrap { padding:0 24px; }
     .top-nav { padding:0 24px; padding-top:26px; }
     .hero-content { padding:0 24px 50px; }
-    .hero-tag { max-width:320px; }
+    .bottom-row { flex-direction:column; align-items:flex-start; }
+    .hero-tag { width:160px; max-width:50vw; }
     .hero-content .sub { font-size:16px; }
     .stats { grid-template-columns:repeat(2,1fr); gap:28px 20px; }
     .stat .num { font-size:34px; }
@@ -220,12 +222,14 @@
     <a href="/#kontakt" class="back">Zur Hauptseite →</a>
   </div>
   <div class="hero-content">
-    <img src="/images/meen-berlin/meen-berlin-tag.webp" alt="Meen Berlin — Schriftzug" class="hero-tag">
     <div class="sub">Ein Fotobuch-Projekt über ein Vierteljahrhundert Berlin — 500 Seiten, 3.300 Fotografien, 25.000 zu Fuß gelaufene Kilometer.</div>
     <div class="byline">Von Dustin Krottki, aka Kevin Schulzbus</div>
-    <div class="cta-row">
-      <a href="#kontakt" class="cta-button">Für Ausstellung & Förderung anfragen →</a>
-      <a href="#galerie" class="cta-button ghost">Zu den Fotos ↓</a>
+    <div class="bottom-row">
+      <div class="cta-row">
+        <a href="#kontakt" class="cta-button">Für Ausstellung & Förderung anfragen →</a>
+        <a href="#galerie" class="cta-button ghost">Zu den Fotos ↓</a>
+      </div>
+      <img src="/images/meen-berlin/meen-berlin-tag.webp" alt="Meen Berlin — Schriftzug" class="hero-tag">
     </div>
   </div>
 </header>
