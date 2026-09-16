@@ -133,6 +133,15 @@
   .item .image img { width:100%; height:auto; display:block; transition:transform 0.25s ease; }
   .item .image:hover img { transform:scale(1.03); }
 
+  /* VIDEOS */
+  section#videos { padding-bottom:120px; }
+  .video-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:28px; }
+  .video-item { background:#0A0A0A; overflow:hidden; }
+  .video-item video { width:100%; aspect-ratio:16/9; display:block; background:#0A0A0A; }
+  @media (max-width:820px) {
+    .video-grid { grid-template-columns:1fr; }
+  }
+
   /* LIGHTBOX */
   .lightbox {
     position:fixed; inset:0; background:rgba(10,10,10,0.94); z-index:200;
@@ -327,6 +336,33 @@
     </div>
     <div class="lightbox-counter" id="lightboxCounter"></div>
   </div>
+
+  <section id="videos">
+    <div class="section-label">Bewegtbild</div>
+    <p class="galerie-note">Kurze Videoclips aus der Berlin-Dokumentation.</p>
+    <div class="video-grid">
+      <div class="video-item">
+        <video controls preload="none" playsinline poster="/videos/meen-berlin/berlin-august-v1-poster.webp">
+          <source src="/videos/meen-berlin/berlin-august-v1.mp4" type="video/mp4">
+        </video>
+      </div>
+      <div class="video-item">
+        <video controls preload="none" playsinline poster="/videos/meen-berlin/berlin-august-v2-poster.webp">
+          <source src="/videos/meen-berlin/berlin-august-v2.mp4" type="video/mp4">
+        </video>
+      </div>
+      <div class="video-item">
+        <video controls preload="none" playsinline poster="/videos/meen-berlin/berlin-august-v3-poster.webp">
+          <source src="/videos/meen-berlin/berlin-august-v3.mp4" type="video/mp4">
+        </video>
+      </div>
+      <div class="video-item">
+        <video controls preload="none" playsinline poster="/videos/meen-berlin/berlin-august-v4-poster.webp">
+          <source src="/videos/meen-berlin/berlin-august-v4.mp4" type="video/mp4">
+        </video>
+      </div>
+    </div>
+  </section>
 
   <section id="fotograf">
     <div class="section-label">Über den Fotografen</div>
