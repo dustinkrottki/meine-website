@@ -154,10 +154,12 @@
   .lightbox-close {
     position:absolute; top:28px; right:36px; color:#fff; font-size:26px; cursor:pointer;
     width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+    z-index:2;
   }
   .lightbox-nav {
     position:absolute; top:0; bottom:0; width:15%; min-width:60px;
     display:flex; align-items:center; cursor:pointer; user-select:none;
+    z-index:1;
   }
   .lightbox-nav svg { width:32px; height:32px; opacity:0.75; transition:opacity 0.15s ease; }
   .lightbox-nav:hover svg { opacity:1; }
