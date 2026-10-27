@@ -151,6 +151,11 @@
   .more-note { grid-column:1/-1; font-size:14px; color:#c4c4c4; padding-top:20px; border-top:1px dashed #e5e5e5; text-align:center; }
 
   /* VIDEO */
+  /* SHOWREEL */
+  section#showreel { padding-bottom:140px; }
+  .showreel-video { max-width:640px; background:#0A0A0A; }
+  .showreel-video video { width:100%; height:auto; display:block; }
+
   section#video { padding-bottom:140px; }
   .video-toggle {
     background:#0A0A0A;
@@ -342,6 +347,15 @@
         <div class="cap"><b>Richtung Fernsehturm</b></div>
       </div>
 <!-- NEUE-BILDER-MARKE: hier fügt das Admin-Tool neue Galerie-Einträge ein, nicht entfernen -->
+    </div>
+  </section>
+
+  <section id="showreel">
+    <div class="section-label">Showreel</div>
+    <div class="showreel-video">
+      <video controls preload="none" playsinline poster="/videos/showreel/showreel-2025-poster.webp">
+        <source src="/videos/showreel/showreel-2025.mp4" type="video/mp4">
+      </video>
     </div>
   </section>
 
